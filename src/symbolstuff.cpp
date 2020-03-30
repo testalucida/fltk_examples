@@ -342,7 +342,7 @@ void Decision::draw() {
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include <FL/Fl_SVG_Image.H>
+//#include <FL/Fl_SVG_Image.H>
 Symbol* SymbolFactory::create( SymbolId type, int x, int y, int w, int h,
 		                       bool xy_is_center ) {
 	//xy_is_center = true: create Symbol not at x, y but in such a way
@@ -365,12 +365,6 @@ Symbol* SymbolFactory::create( SymbolId type, int x, int y, int w, int h,
 
 	setSizeAndPosition( pSymbol, x, y, w, h, xy_is_center );
 	_symbols.push_back(pSymbol);
-
-	if( type == SymbolId::START ) {
-//		Fl_SVG_Image *svg = new Fl_SVG_Image("./src/symbols/start.svg");
-//		svg->scale(pSymbol->w()-2, pSymbol->h()-2);
-//		pSymbol->image(svg);
-	}
 
 	return pSymbol;
 }
