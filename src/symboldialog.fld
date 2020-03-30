@@ -1,0 +1,86 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1,0400
+header_name {.h}
+code_name {.cxx}
+decl {\#include <FL/Fl_Toggle_Button.H>} {public global
+}
+
+Function {make_symboldialog()} {open
+} {
+  Fl_Window {} {
+    label {Symbol Configuration} open
+    xywh {92 73 500 170} type Double color 54 visible
+  } {
+    Fl_Return_Button _pBtnOk {
+      label OK
+      xywh {10 137 72 25} box THIN_UP_FRAME down_box THIN_DOWN_FRAME color 53
+    }
+    Fl_Button _pBtnCancel {
+      label Cancel
+      xywh {92 137 72 25} box THIN_UP_FRAME down_box THIN_DOWN_FRAME color 53
+    }
+    Fl_Input _pSymbolText {
+      label {Enter symbol's label:}
+      xywh {180 5 312 25} box THIN_DOWN_FRAME labelfont 1
+    }
+    Fl_Box {} {
+      label {Next symbol to add: }
+      xywh {6 52 173 17} labelfont 1
+    }
+    Fl_Group _pNextSymbolGroup {open
+      xywh {180 39 312 49} box FLAT_BOX color 54
+    } {
+      Fl_Button _pBtnDecision {
+        label 1
+        tooltip Decision xywh {180 44 35 35} box THIN_UP_FRAME down_box THIN_DOWN_FRAME
+        class Fl_Toggle_Button
+      }
+      Fl_Button _pBtnProcess {
+        label 2
+        tooltip Process xywh {217 44 35 35} box THIN_UP_FRAME down_box THIN_DOWN_FRAME
+        class Fl_Toggle_Button
+      }
+      Fl_Button _pBtnConnector {
+        label C
+        tooltip Process xywh {456 44 35 35} box THIN_UP_FRAME down_box THIN_DOWN_FRAME
+        class Fl_Toggle_Button
+      }
+      Fl_Button _pBtnInputOutput {
+        label 3
+        tooltip {Input/Output} xywh {255 44 35 35} box THIN_UP_FRAME down_box THIN_DOWN_FRAME
+        class Fl_Toggle_Button
+      }
+      Fl_Button _pBtnDocument {
+        label 4
+        tooltip Document xywh {292 44 35 35} box THIN_UP_FRAME down_box THIN_DOWN_FRAME
+        class Fl_Toggle_Button
+      }
+      Fl_Button _pBtnDataStorage {
+        label 5 selected
+        tooltip Document xywh {330 44 35 35} box THIN_UP_FRAME down_box THIN_DOWN_FRAME
+        class Fl_Toggle_Button
+      }
+    }
+    Fl_Box _pLblConnectWith {
+      label {Connect with:}
+      xywh {6 97 110 17} labelfont 1 deactivate
+    }
+    Fl_Round_Button _pOptionYes {
+      label YES
+      tooltip {Connect the next symbol with the YES branch of the current decision symbol} xywh {176 93 70 25} down_box ROUND_DOWN_BOX deactivate
+    }
+    Fl_Round_Button _pOptionNo {
+      label NO
+      tooltip {Connect the next symbol with the NO branch of the current decision symbol} xywh {228 93 70 25} down_box ROUND_DOWN_BOX deactivate
+    }
+  }
+}
+
+Function {enableConnectWith(bool enable)} {
+  comment {Enables YES-/NO options for 
+symbol to follow decision symbol} open return_type void
+} {
+  code {_pOptionYes->activate();
+_pOptionNo->activate();
+_pLblConnectWith->activate();} {}
+}

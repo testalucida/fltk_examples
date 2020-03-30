@@ -1,0 +1,180 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1,0400
+header_name {.h}
+code_name {.cxx}
+class SymbolDialogUI {open
+} {
+  Function {SymbolDialogUI()} {open
+  } {
+    Fl_Window {} {open selected
+      xywh {119 203 570 230} type Double color 53 align 80 visible
+    } {
+      Fl_Input _pLabelText {
+        label {Enter symbol's label text: }
+        xywh {208 12 182 47} box FLAT_BOX labelfont 1 labelsize 13 textsize 13
+        code0 {\#include "Fl_Multiline_Input.H"}
+        class Fl_Multiline_Input
+      }
+      Fl_Tabs {} {open
+        xywh {14 75 536 107} box FLAT_BOX selection_color 135
+      } {
+        Fl_Group {} {
+          label Decision
+          xywh {14 100 536 82} box FLAT_BOX color 52 selection_color 53 labelsize 13 hide
+        } {
+          Fl_Box {} {
+            label {Connect YES branche with symbol: }
+            xywh {16 112 263 22} labelfont 1 labelsize 13
+          }
+          Fl_Box {} {
+            label {Connect NO branche with symbol: }
+            xywh {17 147 257 22} labelfont 1 labelsize 13
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {278 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {311 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {344 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {377 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {410 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {443 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {476 109 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {278 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {311 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {344 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {377 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {410 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {443 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {476 144 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+        }
+        Fl_Group {} {
+          label {Other Symbols} open
+          xywh {15 100 535 75} box FLAT_BOX color 52 selection_color 53 labelsize 13
+        } {
+          Fl_Box {} {
+            label {Connect with symbol: }
+            xywh {16 127 167 22} labelfont 1 labelsize 13
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {278 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {476 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {443 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {410 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {377 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {344 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+          Fl_Button btnDecision {
+            label d
+            xywh {311 124 30 30} box FLAT_BOX
+            code0 {\#include <FL/Fl_Toggle_Button.H>}
+            class Fl_Toggle_Button
+          }
+        }
+      }
+      Fl_Return_Button {} {
+        label OK
+        xywh {15 195 72 25}
+      }
+      Fl_Button {} {
+        label Cancel
+        xywh {90 195 70 25}
+      }
+    }
+  }
+}
