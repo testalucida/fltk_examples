@@ -117,7 +117,7 @@ public:
 		getXW( dd, x, w );
 		int y, h;
 		getYH( dd, y, h );
-		h = 10; //test
+		//h = 10; //test
 
 		_widget->resize( x, y, w, h );
 	}
@@ -168,6 +168,44 @@ public:
 	inline void getYH( const DragDelta& dd, int& y, int& h ) {
 		y = _widget->y();
 		h = _widget->h();
+		bool drag_bottom_side = false;
+		bool enlarging_h = false;
+
+		if( dd.delta_y >= 0 ) { //dragging to the bottom (but not necessarily the bottom side)
+			if( dd.new_y > (y + h) ) {
+				drag_bottom_side = true;
+				enlarging_h = true;
+			}
+		} else { //dragging to the top
+			if( dd.new_y < y ) {
+				enlarging_h = true;
+			} else {
+				drag_bottom_side = true;
+			}
+		}
+
+		int delta_y = abs( dd.delta_y );
+		if( drag_bottom_side ) {
+			//dragging bottom side...
+			if( enlarging_h ) {
+				//...to the bottom -- height becomes higher
+				h += dd.delta_y;
+			} else {
+				//...to the left -- width becomes smaller
+				h -= delta_y;
+			}
+		} else {
+			//dragging top side...
+			if( enlarging_h ) {
+				//...to the top - y becomes lesser, bottom side stable so h must increase
+				y -= delta_y;
+				h += delta_y;
+			} else {
+				//...to the bottom - y becomes greater, bottom side stable so h must decrease
+				y += delta_y;
+				h -= delta_y;
+			}
+		}
 	}
 
 private:
