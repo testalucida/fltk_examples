@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 #include <stdexcept>
+#include <cmath>
 
 using namespace std;
 
@@ -44,6 +45,137 @@ static int cnt = 0;
 MyBox* box1;
 MyBox* box2;
 
+//struct DragDirection {
+//	bool N = false;
+//	bool E = false;
+//	bool S = false;
+//	bool W = false;
+//	void reset() {
+//		N = E = S = W = false;
+//	}
+//};
+
+struct DragDelta {
+	int new_x = 0;
+	int new_y = 0;
+	int delta_x = 0;
+	int delta_y = 0;
+};
+
+class DragHelper {
+public:
+	DragHelper() {}
+	/**
+	 * Call this method after having received a PUSH event
+	 * and before receiving the first DRAG event.
+	 * x and y have to be the upper left corner of the Widget to be dragged.
+	 */
+	void prepareDragging( int x, int y ) {
+		_x = x;
+		_y = y;
+		_offset_x = x - Fl::event_x();    // save where user clicked for dragging
+		_offset_y = y - Fl::event_y();
+	}
+
+	/**
+	 * Call this for dragging purposes. (Opposite to resizing dragging means
+	 * moving the widget as a whole according to the dragging amount
+	 * in x and y direction)
+	 * Gets the amount of dragging into x and y direction.
+	 * Gets the new calculated top left corner of the widget to draw.
+	 */
+	inline DragDelta& getDragDelta() {
+		_dragDelta.new_x = _offset_x + Fl::event_x();
+		_dragDelta.new_y = _offset_y + Fl::event_y();
+		_dragDelta.delta_x = _dragDelta.new_x - _x;
+		_dragDelta.delta_y = _dragDelta.new_y - _y;
+		_x = _dragDelta.new_x;
+		_y = _dragDelta.new_y;
+		return _dragDelta;
+	}
+
+private:
+	int _x = 0;
+	int _y = 0;
+	int _offset_x = 0;
+	int _offset_y = 0;
+	DragDelta _dragDelta;
+};
+
+class ResizeHelper {
+public:
+	ResizeHelper() {}
+
+	void prepareResizing( Fl_Widget* w ) {
+		_widget = w;
+		_dragHelper.prepareDragging( w->x(), w->y() );
+	}
+
+	inline void resizeWidget() {
+		DragDelta& dd = _dragHelper.getDragDelta();
+		int x, w;
+		getXW( dd, x, w );
+		int y, h;
+		getYH( dd, y, h );
+		h = 10; //test
+
+		_widget->resize( x, y, w, h );
+	}
+
+	inline void getXW( const DragDelta& dd, int& x, int& w ) {
+		x = _widget->x();
+		w = _widget->w();
+
+		bool drag_right_side = false;
+		bool enlarging_w = false;
+		if( dd.delta_x >= 0 ) { //dragging to the right (but not necessarily the right side)
+			if( dd.new_x > (x + w) ) {
+				drag_right_side = true;
+				enlarging_w = true;
+			}
+		} else { //dragging to the left
+			if( dd.new_x < x ) {
+				enlarging_w = true;
+			} else {
+				drag_right_side = true;
+			}
+		}
+
+		int delta_x = abs( dd.delta_x );
+		if( drag_right_side ) {
+			//dragging right side...
+			if( enlarging_w ) {
+				//...to the right -- width becomes wider
+				w += dd.delta_x;
+			} else {
+				//...to the left -- width becomes smaller
+				w -= delta_x;
+			}
+		} else {
+			//dragging left side...
+			if( enlarging_w ) {
+				//...to the left - x becomes lesser, right side stable so w must increase
+				x -= delta_x;
+				w += delta_x;
+			} else {
+				//...to the right - x becomes greater, right side stable so w must decrease
+				x += delta_x;
+				w -= delta_x;
+			}
+		}
+	}
+
+	inline void getYH( const DragDelta& dd, int& y, int& h ) {
+		y = _widget->y();
+		h = _widget->h();
+	}
+
+private:
+	Fl_Widget* _widget;
+	Position _dragstart;
+	DragHelper _dragHelper;
+};
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class MyBox : public Fl_Box {
@@ -60,7 +192,7 @@ public:
 	}
 
 	void toggleSelection( bool selected ) {
-		fprintf(stderr, "toggled box %d, selected = %d\n", _cnt, _selected );
+		//fprintf(stderr, "toggled box %d, selected = %d\n", _cnt, _selected );
 		_selected = selected;
 		_selectionChanged = true;
 		redraw();
@@ -117,21 +249,19 @@ public:
 		drawSelectionSquare( xx, yy, ww, hh );
 	}
 
-	void dragAsFollower( int delta_x, int delta_y ) {
-		fprintf( stderr, "moving %d, %d\n", delta_x, delta_y );
+	void move( int delta_x, int delta_y ) {
+		//fprintf( stderr, "moving %d, %d\n", delta_x, delta_y );
 		position( x() + delta_x, y() + delta_y );
-		parent()->redraw();
 	}
 
 protected:
 	int handle(int e) {
-		static int offset[2] = { 0, 0 };
+		//static int offset[2] = { 0, 0 };
 		switch(e) {
 		case FL_PUSH: {
 			fprintf( stderr, "MyBox(%d)::handle(FL_PUSH)\n", _cnt );
 			//prepare dragging:
-			offset[0] = x() - Fl::event_x();    // save where user clicked for dragging
-			offset[1] = y() - Fl::event_y();
+			_dragHelper.prepareDragging( x(), y() );
 
 			//do selection callback to unselect other selected symbols
 			bool draw = false;
@@ -153,17 +283,12 @@ protected:
 		}
 		case FL_DRAG: {
 			//fprintf( stderr, "MyBox::handle(FL_DRAG\n)" );
-			int event_x = Fl::event_x();
-			int event_y = Fl::event_y();
-			int new_x = offset[0] + event_x;
-			int new_y = offset[1] + event_y;
-			int delta_x = new_x - x();
-			int delta_y = new_y - y();
-			position( new_x, new_y );
+			DragDelta& dd = _dragHelper.getDragDelta();
+			move( dd.delta_x, dd.delta_y );
 
 			//TODO: create DraggingCallback
 			if( _cnt == 1 ) { //testtesttest
-				box2->dragAsFollower( delta_x, delta_y );
+				box2->move( dd.delta_x, dd.delta_y );
 			}
 			parent()->redraw();
 			return(1);
@@ -195,6 +320,7 @@ private:
 	bool _selected = false;
 	bool _selectionChanged = false;
 	SelectionCallback _selectionCallback = NULL;
+	DragHelper _dragHelper;
 	int _cnt = 0;
 };
 
@@ -241,12 +367,15 @@ public:
 	}
 protected:
 	int handle(int evt) {
+		//static int offset[2] = { 0, 0 };
 		switch( evt ) {
 		case FL_PUSH: {
+//			offset[0] = x() - Fl::event_x();    // save where user clicked for dragging
+//			offset[1] = y() - Fl::event_y();
 //			fprintf( stderr, "MyCanvas::handle(FL_PUSH)\n" );
 			Fl_Widget* w = Fl::belowmouse ();
 			if( w == this ) {
-				//unselect all selected symbols:
+				//clicking on canvas results in unselecting all selected symbols:
 				unselectAllSymbols();
 
 				//prepare dragging:
@@ -254,6 +383,13 @@ protected:
 //						 x(), y(), Fl::event_x(), Fl::event_y() );
 				_start.x = Fl::event_x() - x();
 				_start.y = Fl::event_y() - y();
+
+				if( !_selectionBox ) {
+					_selectionBox = new SelectionBox( _start.x, _start.y, 1, 1 );
+					add( _selectionBox );
+				}
+
+				_resizeHelper.prepareResizing( _selectionBox );
 				//fprintf( stderr, "Drawing startpoint: %d, %d\n", _start.x, _start.y );
 				return 1;
 			} else {
@@ -287,11 +423,21 @@ protected:
 			return 1;
 		}
 		case FL_DRAG: {
-			if( !_selectionBox ) {
-				//fprintf( stderr, "creating selectionBox\n" );
-				_selectionBox = new SelectionBox( _start.x, _start.y, 1, 1 );
-				add( _selectionBox );
-			}
+//			if( !_selectionBox ) {
+//				_selectionBox = new SelectionBox( _start.x, _start.y, 1, 1 );
+//				add( _selectionBox );
+//			}
+
+			_resizeHelper.resizeWidget();
+
+//			fprintf( stderr,
+//					"origin: %d,%d "
+//					"delta_x/y: %d,%d "
+//					"new_x/y: %d,%d\n"
+//					, _start.x, _start.y,
+//					  dd.delta_x, dd.delta_y,
+//					  dd.new_x, dd.new_y );
+
 			//fprintf( stderr, "MyCanvas::handle(FL_DRAG)\n" );
 			_end.x = Fl::event_x() - x();
 			_end.y = Fl::event_y() - y();
@@ -299,7 +445,7 @@ protected:
 			w = w < 0 ? w*(-1) : w;
 			int h = _end.y - _start.y;
 			h = h < 0 ? h*(-1) : h;
-			_selectionBox->resize( _start.x, _start.y, w, h );
+			//_selectionBox->resize( _start.x, _start.y, w, h );
 			//fprintf( stderr, "DRAGged to: %d,%d\n", _end.x, _end.y );
 			redraw();
 
@@ -316,6 +462,8 @@ private:
 	Position _start;
 	Position _end;
 	SelectionBox* _selectionBox = NULL;
+	DragHelper _dragHelper;
+	ResizeHelper _resizeHelper;
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
