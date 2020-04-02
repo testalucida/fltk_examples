@@ -40,6 +40,7 @@ struct Position {
 
 class MyBox;
 typedef void (*SelectionCallback)(MyBox*, bool shift_pressed, void*);
+typedef void (*MoveCallback)(MyBox*, int delta_x, int delta_y, void*);
 static int cnt = 0;
 
 MyBox* box1;
@@ -230,8 +231,14 @@ public:
 //		color(FL_WHITE); //color of canvas
 	}
 
-	void registerSelectionCallback(SelectionCallback cb) {
+	void registerSelectionCallback(SelectionCallback cb, void* userdata ) {
 		_selectionCallback = cb;
+		_selcb_userdata = userdata;
+	}
+
+	void registerMoveCallback( MoveCallback cb, void* userdata ) {
+		_moveCallback = cb;
+		_movecb_userdata = userdata;
 	}
 
 	void toggleSelection( bool selected ) {
@@ -240,6 +247,10 @@ public:
 		_selectionChanged = true;
 		redraw();
 		_selectionChanged = false;
+	}
+
+	bool isSelected() const {
+		return _selected;
 	}
 
 	virtual void draw() {
@@ -323,10 +334,9 @@ protected:
 			if( !_selected ) {
 				_selected = true;
 				draw = true;
-				bool c = Fl::event_key(FL_Shift_L);
-				//fprintf(stderr, "Shift pressed: %d \n", c );
+				bool shift_pressed = Fl::event_key(FL_Shift_L);
 				if( _selectionCallback ) {
-					(_selectionCallback)(this, c, NULL);
+					(_selectionCallback)( this, shift_pressed, _selcb_userdata );
 				}
 			}
 
@@ -347,9 +357,13 @@ protected:
 				DragDelta& dd = _dragHelper.getDragDelta();
 				move( dd.delta_x, dd.delta_y );
 
-				if( _cnt == 1 ) { //testtesttest
-					box2->move( dd.delta_x, dd.delta_y );
+				if( _moveCallback ) {
+					(_moveCallback)( this, dd.delta_x, dd.delta_y, _movecb_userdata );
 				}
+
+//				if( _cnt == 1 ) { //testtesttest
+//					box2->move( dd.delta_x, dd.delta_y );
+//				}
 			} else {
 				//resize
 				_resizeHelper.resizeWidget();
@@ -441,8 +455,11 @@ private:
 	bool _selectionChanged = false;
 	int _selectionsquare_len = 10;
 	SelectionCallback _selectionCallback = NULL;
+	void* _selcb_userdata = NULL;
 	DragHelper _dragHelper;
 	ResizeHelper _resizeHelper;
+	MoveCallback _moveCallback = NULL;
+	void* _movecb_userdata = NULL;
 	bool _draggingPrepared = false;
 	int _cnt = 0;
 };
@@ -488,6 +505,30 @@ public:
 			box->toggleSelection( false );
 		}
 	}
+
+	void end() {
+		Fl_Group::end();
+		for( int i = 0, imax = children(); i < imax; i++ ) {
+			fprintf( stderr, "child %d\n", i );
+			MyBox* ch = (MyBox*)child( i );
+			ch->registerMoveCallback( onChildMoved_static, this );
+		}
+	}
+
+	static void onChildMoved_static( MyBox* box, int delta_x, int delta_y, void* data ) {
+		MyCanvas* pThis = (MyCanvas*)data;
+		pThis->onChildMoved( box, delta_x, delta_y );
+	}
+
+	void onChildMoved( MyBox* box, int delta_x, int delta_y ) {
+		for( int i = 0, imax = children(); i < imax; i++ ) {
+			MyBox* ch = (MyBox*)child( i );
+			if( ch != box && ch->isSelected() ) {
+				ch->move( delta_x, delta_y );
+			}
+		}
+	}
+
 protected:
 	int handle(int evt) {
 		switch( evt ) {
@@ -581,9 +622,9 @@ int flow() {
 	pWin->color(FL_WHITE);
 	MyCanvas* canvas = new MyCanvas( 0, 0, 500, 500 );
 	box1 = new MyBox(100, 100 );
-	box1->registerSelectionCallback( onSelection );
+	box1->registerSelectionCallback( onSelection, NULL );
 	box2 = new MyBox(100, 200);
-	box2->registerSelectionCallback( onSelection );
+	box2->registerSelectionCallback( onSelection, NULL );
 	canvas->end();
 
 	//pWin->getCanvas()->registerEventCallback(canvasCallback, NULL);
