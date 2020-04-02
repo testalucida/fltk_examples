@@ -208,6 +208,7 @@ int toolbar_widget();
 int testSymbolBaseDialog();
 int testSymbolStuff();
 int test_svg();
+int cursor_test();
 
 int choose = 1;
 
@@ -227,6 +228,8 @@ int main() {
 		return testSymbolStuff();
 	case 6:
 		return test_svg();
+	case 7:
+		return cursor_test();
 	case 99: {
 		fnc f = cb;
 		f(99);

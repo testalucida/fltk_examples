@@ -45,16 +45,6 @@ static int cnt = 0;
 MyBox* box1;
 MyBox* box2;
 
-//struct DragDirection {
-//	bool N = false;
-//	bool E = false;
-//	bool S = false;
-//	bool W = false;
-//	void reset() {
-//		N = E = S = W = false;
-//	}
-//};
-
 struct DragDelta {
 	int new_x = 0;
 	int new_y = 0;
@@ -109,32 +99,37 @@ public:
 	void prepareResizing( Fl_Widget* w ) {
 		_widget = w;
 		_dragHelper.prepareDragging( w->x(), w->y() );
+		_dragstart.x = Fl::event_x();
+		_dragstart.y = Fl::event_y();
 	}
 
 	inline void resizeWidget() {
 		DragDelta& dd = _dragHelper.getDragDelta();
 		int x, w;
-		getXW( dd, x, w );
+		int event_x = Fl::event_x();
+		int event_y = Fl::event_y();
+		getXW( dd, event_x, x, w );
 		int y, h;
-		getYH( dd, y, h );
-		//h = 10; //test
+		getYH( dd, event_y, y, h );
 
 		_widget->resize( x, y, w, h );
 	}
 
-	inline void getXW( const DragDelta& dd, int& x, int& w ) {
+private:
+	inline void getXW( const DragDelta& dd, int event_x, int& x, int& w ) {
 		x = _widget->x();
 		w = _widget->w();
 
 		bool drag_right_side = false;
 		bool enlarging_w = false;
+		int x2 = x + w;
 		if( dd.delta_x >= 0 ) { //dragging to the right (but not necessarily the right side)
-			if( dd.new_x > (x + w) ) {
+			if( x2 == whichIsCloser( event_x, x, x2 ) ) {
 				drag_right_side = true;
 				enlarging_w = true;
 			}
 		} else { //dragging to the left
-			if( dd.new_x < x ) {
+			if( x == whichIsCloser( event_x, x, x2 ) ) {
 				enlarging_w = true;
 			} else {
 				drag_right_side = true;
@@ -165,19 +160,20 @@ public:
 		}
 	}
 
-	inline void getYH( const DragDelta& dd, int& y, int& h ) {
+	inline void getYH( const DragDelta& dd, int event_y, int& y, int& h ) {
 		y = _widget->y();
 		h = _widget->h();
 		bool drag_bottom_side = false;
 		bool enlarging_h = false;
 
+		int y2 = y + h;
 		if( dd.delta_y >= 0 ) { //dragging to the bottom (but not necessarily the bottom side)
-			if( dd.new_y > (y + h) ) {
+			if( y2 == whichIsCloser( event_y, y, y2 ) ) {
 				drag_bottom_side = true;
 				enlarging_h = true;
 			}
 		} else { //dragging to the top
-			if( dd.new_y < y ) {
+			if( y == whichIsCloser( event_y, y, y2 ) ) {
 				enlarging_h = true;
 			} else {
 				drag_bottom_side = true;
@@ -206,6 +202,15 @@ public:
 				h -= delta_y;
 			}
 		}
+	}
+
+	/**
+	 * Checks if x1 or x2 is nearer to check
+	 */
+	inline int whichIsCloser( int check, int a1, int a2 ) {
+		int d1 = abs( check - a1 );
+		int d2 = abs( check - a2 );
+		return ( d1 < d2 ) ? a1 : a2;
 	}
 
 private:
@@ -238,6 +243,7 @@ public:
 	}
 
 	virtual void draw() {
+		//draw a start symbol
 		//fprintf(stderr, "drawing box %d, selected = %d\n", _cnt, _selected );
 		//this->draw_box(); //for testint purpose only
 		int xx = this->x();
@@ -284,7 +290,7 @@ public:
 		}
 
 		int hh = this->h();
-		drawSelectionSquare( xx, yy, ww, hh );
+		drawSelectionSquares( xx, yy, ww, hh );
 	}
 
 	void move( int delta_x, int delta_y ) {
@@ -298,8 +304,19 @@ protected:
 		switch(e) {
 		case FL_PUSH: {
 			fprintf( stderr, "MyBox(%d)::handle(FL_PUSH)\n", _cnt );
-			//prepare dragging:
-			_dragHelper.prepareDragging( x(), y() );
+			//prepare resizing if PUSH event occured within the resizing area,
+			//else prepare dragging:
+			Fl_Cursor crsr = getDragOrResizeCursor( Fl::event_x(), Fl::event_y() );
+			fl_cursor( crsr );
+
+			if( crsr == FL_CURSOR_MOVE) {
+				_dragHelper.prepareDragging( x(), y() );
+				fprintf( stderr, "prepare drag\n" );
+				_draggingPrepared = true;
+			} else {
+				_resizeHelper.prepareResizing( this );
+				fprintf( stderr, "prepare resize\n" );
+			}
 
 			//do selection callback to unselect other selected symbols
 			bool draw = false;
@@ -319,14 +336,23 @@ protected:
 
 			return 1;
 		}
+		case FL_RELEASE:
+			fl_cursor( FL_CURSOR_DEFAULT );
+			_draggingPrepared = false;
+			return 1;
 		case FL_DRAG: {
 			//fprintf( stderr, "MyBox::handle(FL_DRAG\n)" );
-			DragDelta& dd = _dragHelper.getDragDelta();
-			move( dd.delta_x, dd.delta_y );
+			if( _draggingPrepared ) {
+				//TODO: create DraggingCallback
+				DragDelta& dd = _dragHelper.getDragDelta();
+				move( dd.delta_x, dd.delta_y );
 
-			//TODO: create DraggingCallback
-			if( _cnt == 1 ) { //testtesttest
-				box2->move( dd.delta_x, dd.delta_y );
+				if( _cnt == 1 ) { //testtesttest
+					box2->move( dd.delta_x, dd.delta_y );
+				}
+			} else {
+				//resize
+				_resizeHelper.resizeWidget();
 			}
 			parent()->redraw();
 			return(1);
@@ -335,9 +361,14 @@ protected:
 			return Fl_Box::handle(e);
 		}
 	}
+
 private:
-	void drawSelectionSquare( int x, int y, int w, int h ) {
-		int len = 10;
+	/**
+	 * Draws 4 small yellow squares in the corners of this box.
+	 * They are completely drawn within the box.
+	 */
+	void drawSelectionSquares( int x, int y, int w, int h ) {
+		int len = _selectionsquare_len;
 		uchar r, g, b;
 		if( _selected ) {
 			r = 249, g = 255, b = 0; //yellow
@@ -354,11 +385,65 @@ private:
 		fl_rectf( x, y+h-len, len, len, r, g, b );
 
 	}
+
+	Fl_Cursor getDragOrResizeCursor( int x, int y ) {
+		int sq = isInSelectionSquare( x, y );
+		if( sq == 1 || sq == 3 ) {
+			return FL_CURSOR_NW;
+		}
+		if( sq > 0 ) {
+			return FL_CURSOR_NE;
+		}
+
+		return FL_CURSOR_MOVE;
+	}
+
+	/**
+	 * checks if given x, y are in one of the 4 selection squares.
+	 * returns 1 if x/y are in the top left square
+	 * returns 2 if x/y are in the top right square and so on.
+	 * returns 0 if x/y are not in one of the squares.
+	 */
+	int isInSelectionSquare( int x, int y ) {
+		int X = this->x();
+		int W = this->w();
+		int Y = this->y();
+		int H = this->h();
+
+		if( x < (X + _selectionsquare_len ) ) {
+			//maybe one of the left hand squares
+			if( y < (Y + _selectionsquare_len) ) {
+				//top left square
+				return 1;
+			} else if( y > (Y + H - _selectionsquare_len) ) {
+				//bottom left square
+				return 4;
+			}
+		} else {
+			if( x > (X + W - _selectionsquare_len) ) {
+				//maybe one of the right hand squares
+				if( y < (Y + _selectionsquare_len) ) {
+					//top right square
+					return 2;
+				}
+				if( y > (Y + H - _selectionsquare_len) ) {
+					//bottom right square
+					return 3;
+				}
+			}
+		}
+
+		return 0;
+	}
+
 private:
 	bool _selected = false;
 	bool _selectionChanged = false;
+	int _selectionsquare_len = 10;
 	SelectionCallback _selectionCallback = NULL;
 	DragHelper _dragHelper;
+	ResizeHelper _resizeHelper;
+	bool _draggingPrepared = false;
 	int _cnt = 0;
 };
 
@@ -405,30 +490,21 @@ public:
 	}
 protected:
 	int handle(int evt) {
-		//static int offset[2] = { 0, 0 };
 		switch( evt ) {
 		case FL_PUSH: {
-//			offset[0] = x() - Fl::event_x();    // save where user clicked for dragging
-//			offset[1] = y() - Fl::event_y();
-//			fprintf( stderr, "MyCanvas::handle(FL_PUSH)\n" );
 			Fl_Widget* w = Fl::belowmouse ();
 			if( w == this ) {
 				//clicking on canvas results in unselecting all selected symbols:
 				unselectAllSymbols();
 
-				//prepare dragging:
-//				fprintf( stderr, "MyCanvas: PUSH: x() = %d, y() = %d, event_x() = %d, event_y() = %d\n",
-//						 x(), y(), Fl::event_x(), Fl::event_y() );
-				_start.x = Fl::event_x() - x();
-				_start.y = Fl::event_y() - y();
-
+				//prepare resizing
 				if( !_selectionBox ) {
-					_selectionBox = new SelectionBox( _start.x, _start.y, 1, 1 );
+					_selectionBox = new SelectionBox( Fl::event_x() - x(), Fl::event_y() - y(), 1, 1 );
 					add( _selectionBox );
 				}
 
 				_resizeHelper.prepareResizing( _selectionBox );
-				//fprintf( stderr, "Drawing startpoint: %d, %d\n", _start.x, _start.y );
+
 				return 1;
 			} else {
 				return Fl_Group::handle(evt);
@@ -461,30 +537,9 @@ protected:
 			return 1;
 		}
 		case FL_DRAG: {
-//			if( !_selectionBox ) {
-//				_selectionBox = new SelectionBox( _start.x, _start.y, 1, 1 );
-//				add( _selectionBox );
-//			}
 
 			_resizeHelper.resizeWidget();
 
-//			fprintf( stderr,
-//					"origin: %d,%d "
-//					"delta_x/y: %d,%d "
-//					"new_x/y: %d,%d\n"
-//					, _start.x, _start.y,
-//					  dd.delta_x, dd.delta_y,
-//					  dd.new_x, dd.new_y );
-
-			//fprintf( stderr, "MyCanvas::handle(FL_DRAG)\n" );
-			_end.x = Fl::event_x() - x();
-			_end.y = Fl::event_y() - y();
-			int w = _end.x - _start.x;
-			w = w < 0 ? w*(-1) : w;
-			int h = _end.y - _start.y;
-			h = h < 0 ? h*(-1) : h;
-			//_selectionBox->resize( _start.x, _start.y, w, h );
-			//fprintf( stderr, "DRAGged to: %d,%d\n", _end.x, _end.y );
 			redraw();
 
 			return 1;
