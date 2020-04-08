@@ -36,7 +36,7 @@ static Size defaultSymbolSizes[] = {
 		{70, 70}  //Unselect symbol
 };
 
-typedef void (symbolClickCallback)(SymbolId, void*);
+typedef void (SymbolClickCallback)(SymbolId, void*);
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 class SymbolButton : public Fl_Toggle_Button {
@@ -60,8 +60,8 @@ typedef std::vector<SymbolId> SymbolIds;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 class SymbolBar : public Fl_Group {
 public:
-	SymbolBar(int x, int y, symbolClickCallback* cb = NULL, void* data = NULL);
-	SymbolBar(int x, int y, SymbolIds, symbolClickCallback* cb = NULL, void* data = NULL);
+	SymbolBar(int x, int y, SymbolClickCallback* cb = NULL, void* data = NULL);
+	SymbolBar(int x, int y, SymbolIds, SymbolClickCallback* cb = NULL, void* data = NULL);
 
 	/** Get the currently selected Symbol */
 	SymbolId getSelectedSymbol() const;
@@ -84,11 +84,11 @@ public:
 	void resize(int x, int y, int w, int h);
 
 private:
-	void addButton(int x, int y, SymbolId, symbolClickCallback*, void *data = NULL);
+	void addButton(int x, int y, SymbolId, SymbolClickCallback*, void *data = NULL);
 
 private:
 	SymbolIds _symbolIds;
-	symbolClickCallback* _cb = NULL;
+	SymbolClickCallback* _cb = NULL;
 	void* _data = NULL;
 	static const int SPACING = 2;
 	SymbolId _selectedSymbol = SymbolId::NONE;
@@ -106,9 +106,9 @@ public:
 //+++++++++++++++++++++++++++++++++++++++++
 
 #include <FL/Fl_SVG_Image.H>
-class Symbol : public Fl_Box {
+class SymbolBox : public Fl_Box {
 public:
-	Symbol(int x, int y, int w, int h) :
+	SymbolBox(int x, int y, int w, int h) :
 		Fl_Box(x, y, w, h)
     {
 		box(FL_FLAT_BOX);
@@ -116,7 +116,7 @@ public:
 		svg->scale( this->w()-2, this->h()-2, 1, 1 );
 		image(svg);
 	}
-	virtual ~Symbol() {}
+	virtual ~SymbolBox() {}
 	virtual void draw() {Fl_Box::draw();}
 
 	virtual void resize(int x, int y, int w, int h) {
@@ -153,9 +153,9 @@ protected:
 
 //++++++++++++++++++++++++++++++++++++++++
 
-class Start : public Symbol {
+class Start : public SymbolBox {
 public:
-	Start(int x, int y, int w = 0, int h = 0 ) : Symbol(x, y, w, h)
+	Start(int x, int y, int w = 0, int h = 0 ) : SymbolBox(x, y, w, h)
 	{
 	}
 
@@ -168,9 +168,9 @@ public:
 };
 //++++++++++++++++++++++++++++++++++++++++
 
-class Decision : public Symbol {
+class Decision : public SymbolBox {
 public:
-	Decision(int x, int y, int w = 0, int h = 0 ) : Symbol(x, y, w, h)
+	Decision(int x, int y, int w = 0, int h = 0 ) : SymbolBox(x, y, w, h)
 	{
 	}
 
@@ -198,7 +198,7 @@ public:
 //		}
 	}
 
-	Symbol* create(SymbolId type, int x, int y, int w = 0, int h = 0, bool xy_is_center = true);
+	SymbolBox* create(SymbolId type, int x, int y, int w = 0, int h = 0, bool xy_is_center = true);
 
 protected:
 	SymbolFactory(){} // Prevent construction
@@ -207,9 +207,9 @@ protected:
 	//~SymbolFactory() {} // Prevent unwanted destruction
 
 private:
-	void setSizeAndPosition( Symbol*, int x, int y, int w, int h, bool xy_is_center);
+	void setSizeAndPosition( SymbolBox*, int x, int y, int w, int h, bool xy_is_center);
 private:
-	std::vector<Symbol*> _symbols;
+	std::vector<SymbolBox*> _symbols;
 };
 
 

@@ -109,7 +109,7 @@ SymbolButton::SymbolButton(int x, int y, SymbolId symbolId, const char* svg_file
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-SymbolBar::SymbolBar(int x, int y, symbolClickCallback* cb, void* data) :
+SymbolBar::SymbolBar(int x, int y, SymbolClickCallback* cb, void* data) :
 		Fl_Group(x, y, ALL_SYMBOLS_COUNT*SymbolButton::getButtonWidth() +
 				       ALL_SYMBOLS_COUNT*SPACING + SPACING, 34)
 {
@@ -130,7 +130,7 @@ SymbolBar::SymbolBar(int x, int y, symbolClickCallback* cb, void* data) :
 	_selectedSymbol = _symbolIds.at(0);
 }
 
-SymbolBar::SymbolBar(int x, int y, SymbolIds ids, symbolClickCallback* cb, void* data) :
+SymbolBar::SymbolBar(int x, int y, SymbolIds ids, SymbolClickCallback* cb, void* data) :
 		Fl_Group(x, y, ids.size()*SymbolButton::getButtonWidth() +
 				       ids.size()*SPACING + SPACING, 34)
 {
@@ -230,7 +230,7 @@ void SymbolBar::hideSymbol(SymbolId id) {
 }
 
 void SymbolBar::addButton( int x, int y, SymbolId id,
-		                   symbolClickCallback *cb, void *data )
+		                   SymbolClickCallback *cb, void *data )
 {
 	begin();
 	//SymbolButton *b = new SymbolButton( 0, 0, (SymbolId)i, symbolpixmap[i]);
@@ -243,29 +243,29 @@ void SymbolBar::addButton( int x, int y, SymbolId id,
 
 //*********************************************************
 
-void Symbol::setLabel(const char* txt) {
+void SymbolBox::setLabel(const char* txt) {
 	_label.clear();
 	_label.append(txt);
 }
 
-void Symbol::setBorderColor( Fl_Color color ) {
+void SymbolBox::setBorderColor( Fl_Color color ) {
 	_bordercolor = color;
 	//redraw();
 }
 
-void Symbol::setBorderWidth(int w) {
+void SymbolBox::setBorderWidth(int w) {
 	_borderwidth = w;
 }
 
-void Symbol::setLabelFont(Fl_Font font) {
+void SymbolBox::setLabelFont(Fl_Font font) {
 	_labelfont = font;
 }
 
-void Symbol::setLabelFontsize(Fl_Fontsize h) {
+void SymbolBox::setLabelFontsize(Fl_Fontsize h) {
 	_labelfontsize = h;
 }
 
-int Symbol::handle(int e) {
+int SymbolBox::handle(int e) {
 	//cerr << "Symbol::handle(e) -> Event is " << fl_eventnames[e] << endl;
 	static int offset[2] = { 0, 0 };
 	switch ( e ) {
@@ -289,7 +289,7 @@ int Symbol::handle(int e) {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 void Start::draw() {
-	Symbol::draw();
+	SymbolBox::draw();
 	//this->draw_box(); //only for testing purposes
 //	fl_color(_bordercolor);
 //	fl_line_style( FL_SOLID, _borderwidth, NULL );
@@ -343,11 +343,11 @@ void Decision::draw() {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //#include <FL/Fl_SVG_Image.H>
-Symbol* SymbolFactory::create( SymbolId type, int x, int y, int w, int h,
+SymbolBox* SymbolFactory::create( SymbolId type, int x, int y, int w, int h,
 		                       bool xy_is_center ) {
 	//xy_is_center = true: create Symbol not at x, y but in such a way
 	//that x, y is the middle  of the created Symbol.
-	Symbol* pSymbol;
+	SymbolBox* pSymbol;
 	switch(type) {
 	case SymbolId::START:
 		pSymbol = new Start(0, 0, 0, 0);
@@ -369,7 +369,7 @@ Symbol* SymbolFactory::create( SymbolId type, int x, int y, int w, int h,
 	return pSymbol;
 }
 
-void SymbolFactory::setSizeAndPosition( Symbol* pSymbol, int x, int y, int w, int h,
+void SymbolFactory::setSizeAndPosition( SymbolBox* pSymbol, int x, int y, int w, int h,
 		                                bool xy_is_center)
 {
 	if( w == 0 || h == 0 ) {

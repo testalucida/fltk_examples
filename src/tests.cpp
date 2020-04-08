@@ -202,22 +202,25 @@ void cb(int i) {
 }
 
 int drag_example();
-int flow();
+int context_menu();
 int ext_symbols_grp();
 int toolbar_widget();
 int testSymbolBaseDialog();
 int testSymbolStuff();
 int test_svg();
 int cursor_test();
+int equation_of_lines();
+int drawing_lines();
+int line_style();
 
-int choose = 1;
+int choose = 9;
 
 int main() {
 	switch (choose) {
 	case 0:
 		return drag_example();
 	case 1:
-		return flow();
+		return context_menu();
 	case 2:
 		return ext_symbols_grp() ;
 	case 3:
@@ -230,6 +233,12 @@ int main() {
 		return test_svg();
 	case 7:
 		return cursor_test();
+	case 8:
+		return equation_of_lines();
+	case 9:
+		return drawing_lines();
+	case 10:
+		return line_style();
 	case 99: {
 		fnc f = cb;
 		f(99);
